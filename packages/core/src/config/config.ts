@@ -88,6 +88,13 @@ export interface SandboxConfig {
   image: string;
 }
 
+export interface OllamaConfig {
+  model: string;
+  host: string;
+  port: number;
+  enabled?: boolean;
+}
+
 export type FlashFallbackHandler = (
   currentModel: string,
   fallbackModel: string,
@@ -126,6 +133,7 @@ export interface ConfigParameters {
   bugCommand?: BugCommandSettings;
   model: string;
   extensionContextFilePaths?: string[];
+  ollama?: OllamaConfig;
 }
 
 export class Config {
@@ -166,6 +174,7 @@ export class Config {
   private readonly extensionContextFilePaths: string[];
   private modelSwitchedDuringSession: boolean = false;
   flashFallbackHandler?: FlashFallbackHandler;
+  private readonly ollama: OllamaConfig | undefined;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId;
@@ -207,6 +216,7 @@ export class Config {
     this.bugCommand = params.bugCommand;
     this.model = params.model;
     this.extensionContextFilePaths = params.extensionContextFilePaths ?? [];
+    this.ollama = params.ollama;
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -238,7 +248,13 @@ export class Config {
     const contentConfig = await createContentGeneratorConfig(
       modelToUse,
       authMethod,
-      this,
+      {
+        getModel: () => this.getModel(),
+        getOllamaConfig: () => {
+          const ollama = this.getOllamaConfig();
+          return ollama ? { host: ollama.host, port: ollama.port, model: ollama.model } : undefined;
+        },
+      },
     );
 
     const gc = new GeminiClient(this);
@@ -424,6 +440,10 @@ export class Config {
 
   getBugCommand(): BugCommandSettings | undefined {
     return this.bugCommand;
+  }
+
+  getOllamaConfig(): OllamaConfig | undefined {
+    return this.ollama;
   }
 
   getFileService(): FileDiscoveryService {

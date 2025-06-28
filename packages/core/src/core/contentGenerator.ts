@@ -16,6 +16,7 @@ import {
 import { createCodeAssistContentGenerator } from '../code_assist/codeAssist.js';
 import { DEFAULT_GEMINI_MODEL } from '../config/models.js';
 import { getEffectiveModel } from './modelCheck.js';
+import { OllamaClient } from '../ollama/ollamaClient.js';
 
 /**
  * Interface abstracting the core functionalities for generating content and counting tokens.
@@ -38,6 +39,7 @@ export enum AuthType {
   LOGIN_WITH_GOOGLE_PERSONAL = 'oauth-personal',
   USE_GEMINI = 'gemini-api-key',
   USE_VERTEX_AI = 'vertex-ai',
+  USE_OLLAMA = 'ollama',
 }
 
 export type ContentGeneratorConfig = {
@@ -45,12 +47,16 @@ export type ContentGeneratorConfig = {
   apiKey?: string;
   vertexai?: boolean;
   authType?: AuthType | undefined;
+  ollama?: {
+    host: string;
+    port: number;
+  };
 };
 
 export async function createContentGeneratorConfig(
   model: string | undefined,
   authType: AuthType | undefined,
-  config?: { getModel?: () => string },
+  config?: { getModel?: () => string; getOllamaConfig?: () => { host: string; port: number; model: string } | undefined },
 ): Promise<ContentGeneratorConfig> {
   const geminiApiKey = process.env.GEMINI_API_KEY;
   const googleApiKey = process.env.GOOGLE_API_KEY;
@@ -96,11 +102,24 @@ export async function createContentGeneratorConfig(
     return contentGeneratorConfig;
   }
 
+  if (authType === AuthType.USE_OLLAMA) {
+    const ollamaConfig = config?.getOllamaConfig?.();
+    if (ollamaConfig) {
+      contentGeneratorConfig.model = ollamaConfig.model;
+      contentGeneratorConfig.ollama = {
+        host: ollamaConfig.host,
+        port: ollamaConfig.port,
+      };
+    }
+    return contentGeneratorConfig;
+  }
+
   return contentGeneratorConfig;
 }
 
 export async function createContentGenerator(
   config: ContentGeneratorConfig,
+  toolRegistry?: any,
 ): Promise<ContentGenerator> {
   const version = process.env.CLI_VERSION || process.version;
   const httpOptions = {
@@ -123,6 +142,21 @@ export async function createContentGenerator(
     });
 
     return googleGenAI.models;
+  }
+
+  if (config.authType === AuthType.USE_OLLAMA) {
+    if (!config.ollama) {
+      throw new Error('Ollama configuration missing for USE_OLLAMA auth type');
+    }
+    
+    return new OllamaClient(
+      {
+        host: config.ollama.host,
+        port: config.ollama.port,
+        model: config.model,
+      },
+      toolRegistry,
+    );
   }
 
   throw new Error(
