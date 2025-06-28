@@ -27,6 +27,14 @@ Gemini CLI is Google's command-line AI workflow tool that connects to various to
 - `npm run typecheck` - TypeScript type checking
 - `npm run preflight` - Complete validation (clean, install, format, lint, build, test)
 
+### Git Operations
+- `git add <files>` - Stage files for commit
+- `git commit -m "message"` - Commit changes with message
+- `git push origin <branch>` - Push changes to GitHub
+- `git status` - Check current git status
+- `git diff` - Show unstaged changes
+- `git log --oneline -n 10` - Show recent commits
+
 ## Architecture
 
 ### Monorepo Structure
@@ -59,3 +67,12 @@ Gemini CLI is Google's command-line AI workflow tool that connects to various to
 - ESLint with custom rules for React and imports
 - Prettier formatting (80 chars, single quotes, semicolons)
 - Apache-2.0 license with mandatory headers
+
+## Local LLM Mode (Ollama/Gemma 3)
+The codebase is being modified to support local LLM via Ollama:
+- **Config File**: `~/.gemini/ollama_config.json` enables Ollama mode
+- **Implementation**: 
+  - Step 1: OllamaConfig type and config loader in `packages/core/src/config/`
+  - Step 2: Ollama client with pseudo function calling in `packages/core/src/code_assist/ollama_client.ts`
+  - Step 3: Integration in `packages/core/src/code_assist/server.ts`
+- **Function Calling**: Uses `<tool_code>` blocks with JSON for tool invocation
