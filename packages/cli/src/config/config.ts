@@ -18,6 +18,7 @@ import {
   DEFAULT_GEMINI_EMBEDDING_MODEL,
   FileDiscoveryService,
   TelemetryTarget,
+  loadOllamaConfig,
 } from '@google/gemini-cli-core';
 import { Settings } from './settings.js';
 
@@ -197,6 +198,9 @@ export async function loadCliConfig(
 
   const sandboxConfig = await loadSandboxConfig(settings, argv);
 
+  // Load Ollama configuration
+  const ollamaConfig = await loadOllamaConfig();
+
   return new Config({
     sessionId,
     embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
@@ -245,6 +249,7 @@ export async function loadCliConfig(
     bugCommand: settings.bugCommand,
     model: argv.model!,
     extensionContextFilePaths,
+    ollama: ollamaConfig || undefined,
   });
 }
 

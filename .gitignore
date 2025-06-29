@@ -6,6 +6,9 @@
 .gemini/
 !gemini/config.yaml
 
+# Ollama config (keep example, ignore user-specific configs)
+# ollama_config.json
+
 # Dependency directory
 node_modules
 bower_components

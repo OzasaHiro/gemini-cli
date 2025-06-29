@@ -181,6 +181,7 @@ export class OllamaClient implements ContentGenerator {
 
   private async callOllamaApi(prompt: string): Promise<string> {
     const url = `http://${this.config.host}:${this.config.port}/api/generate`;
+    console.log(`[Ollama] Calling API: ${url} with model: ${this.config.model}`);
     
     const response = await fetch(url, {
       method: 'POST',

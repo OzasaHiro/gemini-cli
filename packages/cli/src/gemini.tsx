@@ -101,14 +101,23 @@ export async function main() {
   const extensions = loadExtensions(workspaceRoot);
   const config = await loadCliConfig(settings.merged, extensions, sessionId);
 
-  // set default fallback to gemini api key
+  // set default fallback - prioritize Ollama if config exists, then gemini api key
   // this has to go after load cli because thats where the env is set
-  if (!settings.merged.selectedAuthType && process.env.GEMINI_API_KEY) {
-    settings.setValue(
-      SettingScope.User,
-      'selectedAuthType',
-      AuthType.USE_GEMINI,
-    );
+  if (!settings.merged.selectedAuthType) {
+    const ollamaConfig = config.getOllamaConfig();
+    if (ollamaConfig && ollamaConfig.enabled) {
+      settings.setValue(
+        SettingScope.User,
+        'selectedAuthType',
+        AuthType.USE_OLLAMA,
+      );
+    } else if (process.env.GEMINI_API_KEY) {
+      settings.setValue(
+        SettingScope.User,
+        'selectedAuthType',
+        AuthType.USE_GEMINI,
+      );
+    }
   }
 
   setMaxSizedBoxDebugging(config.getDebugMode());

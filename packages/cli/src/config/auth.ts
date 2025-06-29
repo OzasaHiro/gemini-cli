@@ -35,5 +35,11 @@ export const validateAuthMethod = (authMethod: string): string | null => {
     return null;
   }
 
+  if (authMethod === AuthType.USE_OLLAMA) {
+    // Ollama validation - check if server is accessible
+    // For now, just allow it (validation will happen during actual API call)
+    return null;
+  }
+
   return 'Invalid auth method selected.';
 };

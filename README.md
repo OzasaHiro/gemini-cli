@@ -69,7 +69,21 @@ With the Gemini CLI you can:
    npm run build
    ```
 
-4. **Create Ollama configuration:**
+4. **Create Ollama configuration (choose one method):**
+   
+   **Option A: Project-local configuration (Recommended for development)**
+   ```bash
+   cat > ollama_config.json << EOF
+   {
+     "enabled": true,
+     "model": "gemma3:27b",
+     "host": "localhost",
+     "port": 11434
+   }
+   EOF
+   ```
+
+   **Option B: User-global configuration**
    ```bash
    mkdir -p ~/.gemini
    cat > ~/.gemini/ollama_config.json << EOF
@@ -95,7 +109,13 @@ The CLI will automatically detect the Ollama configuration and use your local LL
 
 ### Ollama Configuration File
 
-Create `~/.gemini/ollama_config.json` to enable local LLM mode:
+The CLI searches for Ollama configuration files in the following priority order:
+
+1. **`./ollama_config.json`** (Current project directory - highest priority)
+2. **`./.gemini/ollama_config.json`** (Project-local .gemini directory)
+3. **`~/.gemini/ollama_config.json`** (User home directory - lowest priority)
+
+Configuration file format:
 
 ```json
 {
@@ -106,8 +126,14 @@ Create `~/.gemini/ollama_config.json` to enable local LLM mode:
 }
 ```
 
-To switch back to Google's Gemini API, simply rename or delete this file:
+**To switch back to Google's Gemini API:**
+- Delete or rename the configuration file
+- Or set `"enabled": false` in the config file
+
 ```bash
+# Remove project-local config
+rm ollama_config.json
+# Or remove user-global config
 mv ~/.gemini/ollama_config.json ~/.gemini/ollama_config.json.bak
 ```
 
@@ -210,8 +236,17 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup and guidelines.
 
 - **Architecture**: Ollama support is implemented via the `ContentGenerator` interface
 - **Tool Calling**: Uses text-based `<tool_code>` blocks parsed from model responses
-- **Configuration**: Auto-detects Ollama mode via `~/.gemini/ollama_config.json`
+- **Configuration**: Multi-location config file detection with priority order
+- **Auto-detection**: Automatically switches to Ollama mode when config file is found
 - **Compatibility**: Maintains full backward compatibility with Google's Gemini API
+
+### Recent Updates
+
+- ✅ **Multi-location configuration**: Config files can be placed in project directory for easier management
+- ✅ **Automatic mode detection**: CLI automatically detects and switches to Ollama when config is present
+- ✅ **Enhanced tool support**: Full tool registry integration with pseudo function calling
+- ✅ **Improved error handling**: Better validation and debugging for Ollama connections
+- ✅ **Development-friendly**: Project-local configs for easier development workflow
 
 ## License
 
